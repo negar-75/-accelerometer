@@ -34,20 +34,21 @@ const OrientationInfo = (): React.ReactElement => {
     });
   };
   const handlePermission = () => {
-    if (typeof (DeviceMotionEvent as any).requestPermission === "function") {
-      // iOS 13+
-      (DeviceMotionEvent as any)
-        .requestPermission()
-        .then((state: State) => {
-          if (state === "granted") {
-            setPermission(true);
-          }
-        })
-        .catch(console.error);
-    } else {
-      // non iOS 13+
-      setPermission(true);
-    }
+    Notification.requestPermission();
+    // if (typeof (DeviceMotionEvent as any).requestPermission === "function") {
+    //   // iOS 13+
+    //   (DeviceMotionEvent as any)
+    //     .requestPermission()
+    //     .then((state: State) => {
+    //       if (state === "granted") {
+    //         setPermission(true);
+    //       }
+    //     })
+    //     .catch(console.error);
+    // } else {
+    //   // non iOS 13+
+    //   setPermission(true);
+    // }
   };
   return (
     <>
