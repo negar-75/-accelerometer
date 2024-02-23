@@ -1,35 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-const AccelerometerComponent: React.FC = () => {
-  const [acceleration, setAcceleration] = useState({ x: 0, y: 0, z: 0 });
+type DeviceOrientation = {
+  x: number | null | undefined;
+  y: number | null | undefined;
+  z: number | null | undefined;
+};
+
+type State = "granted" | "denied";
+
+const OrientationInfo = (): React.ReactElement => {
+  const [permission, setPermission] = useState<boolean>(false);
+  const [deviceOrientation, setDeviceOrientation] = useState<DeviceOrientation>(
+    {
+      x: null,
+      y: null,
+      z: null,
+    }
+  );
 
   useEffect(() => {
-    const handleMotionEvent = (event: DeviceMotionEvent) => {
-      if (event.accelerationIncludingGravity) {
-        const { accelerationIncludingGravity } = event;
-        setAcceleration({
-          x: accelerationIncludingGravity.x as number,
-          y: accelerationIncludingGravity.y as number,
-          z: accelerationIncludingGravity.z as number
-        });
-      }
-    };
-
-    window.addEventListener('devicemotion', handleMotionEvent);
-
+    if (!permission) return;
+    window.addEventListener("devicemotion", handleDeviceMotion);
     return () => {
-      window.removeEventListener('devicemotion', handleMotionEvent);
+      window.removeEventListener("devicemotion", handleDeviceMotion);
     };
-  }, []);
+  }, [permission]);
 
+  const handleDeviceMotion = (event: DeviceMotionEvent) => {
+    setDeviceOrientation({
+      x: event.acceleration?.x,
+      y: event.acceleration?.y,
+      z: event.acceleration?.z,
+    });
+  };
+  const handlePermission = () => {
+    if (typeof (DeviceMotionEvent as any).requestPermission === "function") {
+      // iOS 13+
+      (DeviceMotionEvent as any)
+        .requestPermission()
+        .then((state: State) => {
+          if (state === "granted") {
+            setPermission(true);
+          }
+        })
+        .catch(console.error);
+    } else {
+      // non iOS 13+
+      setPermission(true);
+    }
+  };
   return (
-    <div>
-      <h2>Accelerometer Data:</h2>
-      <p>X: {acceleration.x.toFixed(2)}</p>
-      <p>Y: {acceleration.y.toFixed(2)}</p>
-      <p>Z: {acceleration.z.toFixed(2)}</p>
-    </div>
+    <>
+      {permission ? (
+        <>
+          <p>X is {(deviceOrientation.x as number)?.toFixed(2)}</p>
+          <p>Y is {(deviceOrientation.y as number)?.toFixed(2)}</p>
+          <p>Z is {(deviceOrientation.z as number)?.toFixed(2)}</p>
+        </>
+      ) : (
+        <div>
+          <h2>Device Orientation</h2>
+          <button onClick={handlePermission}>GIVE PERMISSION</button>
+        </div>
+      )}
+    </>
   );
 };
 
-export default AccelerometerComponent;
+export default OrientationInfo;
